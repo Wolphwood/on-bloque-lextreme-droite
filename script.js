@@ -1,4 +1,67 @@
 (() => {
+  if (window.ToastNotification) return;
+
+  const container = document.createElement("div");
+  Object.assign(container.style, {
+    position: "fixed",
+    top: "10px",
+    right: "10px",
+    zIndex: "2147483647",
+    display: "flex",
+    flexDirection: "column",
+    gap: "5px",
+    maxWidth: "420px",
+    pointerEvents: "none"
+  });
+  document.body.appendChild(container);
+
+  const colors = {
+    success: "#16a34a",
+    error: "#dc2626",
+    warn: "#d97706",
+    info: "#2563eb"
+  };
+
+  window.ToastNotification = (message, type = "info", duration = 4000) => {
+    const toast = document.createElement("div");
+    toast.textContent = message;
+
+    console[type]?.("[XTools]", message);
+
+    Object.assign(toast.style, {
+      background: colors[type] || colors.info,
+      color: "#fff",
+      padding: "6px 9px",
+      borderRadius: "6px",
+      boxShadow: "0 4px 16px rgba(0,0,0,.3)",
+      font: "12px Arial, sans-serif",
+      lineHeight: "1.5",
+      overflowWrap: "anywhere",
+      cursor: "pointer",
+      pointerEvents: "auto",
+      transition: "opacity .25s, transform .25s",
+      opacity: "1",
+      transform: "translateX(0)"
+    });
+
+    const dismiss = () => {
+      if (!toast.isConnected) return;
+      toast.style.opacity = "0";
+      toast.style.transform = "translateX(30px)";
+      setTimeout(() => toast.remove(), 250);
+    };
+
+    let timeout = setTimeout(dismiss, duration);
+    toast.addEventListener("click", dismiss);
+    toast.addEventListener("mouseenter", () => clearTimeout(timeout));
+    toast.addEventListener("mouseleave", () => timeout = setTimeout(dismiss, duration));
+
+    container.prepend(toast);
+    return toast;
+  };
+})();
+
+(() => {
   let bearer = null;
   let resolveAuth;
   const authReady = new Promise(resolve => resolveAuth = resolve);
@@ -24,7 +87,7 @@
     bearer = value;
     restore();
     resolveAuth();
-    console.log("[XTools] Authentification récupérée, interception désactivée.");
+    ToastNotification("Authentification récupérée, interception désactivée.");
   };
 
   XMLHttpRequest.prototype.open = function(method, url, ...args) {
@@ -125,7 +188,7 @@
   async function blockByUsername(username) {
     const userId = await getUserId(username);
     const result = await blockUser(userId);
-    console.log(`[XTools] @${username.replace(/^@/, "")} (${userId}) bloqué.`);
+    ToastNotification(`[XTools] @${username.replace(/^@/, "")} (${userId}) bloqué.`, "success");
     return result;
   }
 
@@ -137,16 +200,16 @@
     isReady: () => !!bearer
   });
 
-  console.log("[XTools] Initialisé, en attente du Bearer...");
+  ToastNotification("Initialisé, en attente du Bearer...");
 })();
 
 (async () => {
   const Wait = (ms = 500) => new Promise(resolve => setTimeout(resolve, ms));
 
   await XTools.ready;
-  console.log("[XTools] Ready!");
+  ToastNotification("Ready!", "info");
 
-  const accounts = [ "MLP_officiel", "J_Bardella", "RNational_off", "ZemmourEric", "Coll_Nemesis", "alexandreloubet", "ASabatou", "alexisjollyrn", "CordierAlice2", "angelique_ranc", "annesicard1", "AntBoulogne54", "villedieu_a", "Au_Evrard", "A_Dutremble", "BChaumeil_RN", "BrunoBilde", "BrunoClavet", "ROULLAUDBEATRIC", "CColombier_RN", "Parmentier_RN", "cathRimbert84", "BentzChristophe", "TribuianiCyril", "DamienRieu", "EddyCasterman", "EmericSalmon", "BlairyEmmanuel", "e_Fouquart", "F_Desouche", "Flo_Joubert", "franckallisio", "Boccaletti83", "Fredericvo79738", "G_Dussausaye", "gisele_lelouis", "Guillaume_Bigot", "GrangierGe", "H2Lepinau", "HeleneLaporteRN", "Jphtanguy", "JocelynDessigny", "JonathanGery_AN", "jordan_guitton", "JorysB3", "beaurainjose", "JoelleMelinRN", "JLechanteux", "JulienGabarron", "julien_limongi", "JulienOdoul", "J_Rancoule", "JRochedy", "jerome_buisson", "MauvieuxKevin", "k_pfeffer", "ljacobelli", "Lionel_Tivoli", "MarcDeFleurian", "FranceLorho", "marine_hamelet", "MarionMarechal", "MatthiasRN", "MarchioMatthieu", "MaximeAmblard5", "TaverneMichael", "MichelGuiniot", "MichleMartinez3", "nadinelechon", "NathCarvalho91", "NMeizonnet", "ObjectifRemi", "BallardPhilippe", "phlottiaux", "Ph_Schreck", "Meurin_P", "FrDesouche", "Reconquete_off", "RenaudCamus", "RNGrandEst", "rn_paca", "RNational_IDF", "LeBourgeois7610", "ChudeauR", "knafo_sarah", "Serge_Muller24", "sblanc66000", "stephan1Rambaud", "sebchenu", "Seb_Humbert", "ThaisEscufon", "MonnierThibaut", "thierry_frappe", "thierryperez43", "Thomas_Mng", "Th_Bnrdt", "Tiffany_Joncour", "T_Houssin", "YaelMenache", "YoannGillet30", "CNEWS", "CNEWSLesOFF", "Frontieresmedia", "linfiltremedia", "Valeurs", "BVoltaire", "tegnererik", "PascalPraud", "christine_kelly", "LaurenceFerrari", "GauthierBret", "deval_eliot", "gabriellecluzel", "mbockcote", "ivanrioufol", "Vero_Jacquier", "anthonyfavalli", "YOANNUSAI", "ElodieHuchard", "ThomasBonnet", "quentingerard_", "rstainville", "S_Lignier", "JulesTorres17", "Jules_Laurans", "DavidAlaime", "JordanFlrtn", "Lauriane_Bd", "Guillaume_fcqt", "anais_marechal_", "evaduparc", "rigault_charles", "GarenShn", "YannMontero", "SevilliaYves", "alienordep", "wdeguerpel", "Eynaud_Marc", "radouan_kourak", "jean_bexon", "tvlofficiel", "BildMartial", "jylgallou", "JulietteBriens", "MagLincorrect", "Incorrectibles", "csapin", "p_condomines", "mathildeklotgen", "IrisBridier", "coupeau_maxime", "NicolasBoutin11", "VltnGR", "LegayMaxime1", "VictorLefebvre", "morandiniblog", "Pierre_GTIL", "jean_de_lacoste", "GrisetCatherine", "jsanchez_rn", "thierrymariani", "v_joron", "AndreRougeOff", "mandrouet", "pr_thionnet", "jrechagneux", "fabriceleggeri", "asfrigout", "ValerieDeloge", "jleonardelli_", "groupeRN_off", "jllacapelle", "louis_aliot", "CocardeEtud", "InstitutILIADE", "LNatifs", "actionfrancaise" ];
+  const accounts = [ "MLP_officiel", "J_Bardella", "RNational_off", "ZemmourEric", "Coll_Nemesis", "alexandreloubet", "ASabatou", "alexisjollyrn", "CordierAlice2", "angelique_ranc", "annesicard1", "AntBoulogne54", "villedieu_a", "Au_Evrard", "A_Dutremble", "BChaumeil_RN", "BrunoBilde", "BrunoClavet", "ROULLAUDBEATRIC", "CColombier_RN", "Parmentier_RN", "cathRimbert84", "BentzChristophe", "TribuianiCyril", "DamienRieu", "EddyCasterman", "EmericSalmon", "BlairyEmmanuel", "e_Fouquart", "F_Desouche", "Flo_Joubert", "franckallisio", "Boccaletti83", "Fredericvo79738", "G_Dussausaye", "gisele_lelouis", "Guillaume_Bigot", "GrangierGe", "H2Lepinau", "HeleneLaporteRN", "Jphtanguy", "JocelynDessigny", "JonathanGery_AN", "jordan_guitton", "JorysB3", "beaurainjose", "JoelleMelinRN", "JLechanteux", "JulienGabarron", "julien_limongi", "JulienOdoul", "J_Rancoule", "JRochedy", "jerome_buisson", "MauvieuxKevin", "k_pfeffer", "ljacobelli", "Lionel_Tivoli", "MarcDeFleurian", "FranceLorho", "marine_hamelet", "MarionMarechal", "MatthiasRN", "MarchioMatthieu", "MaximeAmblard5", "TaverneMichael", "MichelGuiniot", "MichleMartinez3", "nadinelechon", "NathCarvalho91", "NMeizonnet", "ObjectifRemi", "BallardPhilippe", "phlottiaux", "Ph_Schreck", "Meurin_P", "FrDesouche", "Reconquete_off", "RenaudCamus", "RNGrandEst", "rn_paca", "RNational_IDF", "LeBourgeois7610", "ChudeauR", "knafo_sarah", "Serge_Muller24", "sblanc66000", "stephan1Rambaud", "sebchenu", "Seb_Humbert", "ThaisEscufon", "MonnierThibaut", "thierry_frappe", "thierryperez43", "Thomas_Mng", "Th_Bnrdt", "Tiffany_Joncour", "T_Houssin", "YaelMenache", "YoannGillet30", "CNEWS", "CNEWSLesOFF", "Frontieresmedia", "linfiltremedia", "Valeurs", "BVoltaire", "tegnererik", "PascalPraud", "christine_kelly", "LaurenceFerrari", "GauthierBret", "deval_eliot", "gabriellecluzel", "mbockcote", "ivanrioufol", "Vero_Jacquier", "anthonyfavalli", "YOANNUSAI", "ElodieHuchard", "ThomasBonnet", "quentingerard_", "rstainville", "S_Lignier", "JulesTorres17", "Jules_Laurans", "DavidAlaime", "JordanFlrtn", "Lauriane_Bd", "Guillaume_fcqt", "anais_marechal_", "evaduparc", "rigault_charles", "GarenShn", "YannMontero", "SevilliaYves", "alienordep", "wdeguerpel", "Eynaud_Marc", "radouan_kourak", "jean_bexon", "tvlofficiel", "BildMartial", "jylgallou", "JulietteBriens", "MagLincorrect", "Incorrectibles", "csapin", "p_condomines", "mathildeklotgen", "IrisBridier", "coupeau_maxime", "NicolasBoutin11", "VltnGR", "LegayMaxime1", "VictorLefebvre", "morandiniblog", "Pierre_GTIL", "jean_de_lacoste", "GrisetCatherine", "jsanchez_rn", "thierrymariani", "v_joron", "AndreRougeOff", "mandrouet", "pr_thionnet", "jrechagneux", "fabriceleggeri", "asfrigout", "ValerieDeloge", "jleonardelli_", "groupeRN_off", "jllacapelle", "louis_aliot", "CocardeEtud", "InstitutILIADE", "LNatifs", "actionfrancaise" ].sort(() => Math.random() - 0.5);
   
   const unique = [...new Set(accounts.map(account => account.trim().replace(/^@/, "")))];
   const stats = { success: 0, failed: 0, errors: [] };
@@ -155,7 +218,7 @@
 
   for (const [index, account] of unique.entries()) {
     if (window.stopXBlocks) {
-      console.warn("[XTools] Traitement interrompu manuellement.");
+      ToastNotification("Traitement interrompu manuellement.", "warn");
       break;
     }
 
@@ -167,21 +230,22 @@
     } catch (err) {
       stats.failed++;
       stats.errors.push({ account, error: String(err) });
-      console.error(`[XTools] Échec @${account}:`, err);
+      ToastNotification(`[XTools] Échec @${account}:`, 'error');
+      console.error(err);
 
       if (/\b429\b/.test(String(err))) {
-        console.warn("[XTools] Rate limit détecté. Arrêt du traitement.");
+        ToastNotification("Rate limit détecté. Arrêt du traitement.", "warn");
         break;
       }
     }
 
     if (index < unique.length - 1) {
-      const ms = 1000 + Math.random() * 5000;
+      const ms = 3000 + Math.random() * 5000;
       console.log(`[XTools] Next request in ${(ms / 1000).toFixed(2)}s`);
       await Wait(ms);
     }
   }
 
-  console.log(`[XTools] Terminé : ${stats.success} succès, ${stats.failed} échecs.`);
+  ToastNotification(`[XTools] Terminé : ${stats.success} succès, ${stats.failed} échecs.`, "success");
   if (stats.errors.length) console.table(stats.errors);
 })();
