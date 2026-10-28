@@ -26,7 +26,7 @@
     const toast = document.createElement("div");
     toast.textContent = message;
 
-    console[type]?.("[XTools]", message);
+    (console[type] ?? console.log)("[XTools]", message);
 
     Object.assign(toast.style, {
       background: colors[type] || colors.info,
